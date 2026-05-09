@@ -10,28 +10,22 @@ export default function Home() {
 
   const router = useRouter();
 
-  // get logged in user
+  // get user
   useEffect(() => {
 
     async function getUser() {
 
       try {
-
         const res = await fetch("/api/auth/me");
         const data = await res.json();
 
         if (res.ok) {
           setUser(data);
         } else {
-          setUser(null);
           router.push("/login");
         }
 
       } catch (error) {
-
-        console.log(error);
-
-        setUser(null);
         router.push("/login");
       }
     }
@@ -45,18 +39,12 @@ export default function Home() {
 
     async function fetchEvents() {
 
-      try {
+      const res = await fetch("/api/events/get");
+      const data = await res.json();
 
-        const res = await fetch("/api/events/get");
-        const data = await res.json();
-
-        if (Array.isArray(data)) {
-          setEvents(data);
-          setFilteredEvents(data);
-        }
-
-      } catch (error) {
-        console.log(error);
+      if (Array.isArray(data)) {
+        setEvents(data);
+        setFilteredEvents(data);
       }
     }
 
@@ -76,67 +64,40 @@ export default function Home() {
     setFilteredEvents(filtered);
   }
 
-  // booking page
+  // book
   function handleBook(id) {
     router.push(`/booking/${id}`);
   }
 
   // logout
   async function logout() {
-
     await fetch("/api/auth/logout");
-
     router.push("/login");
   }
 
   // delete event
   async function deleteEvent(id) {
 
-    const confirmDelete = confirm("Delete this event?");
+    if (!confirm("Delete this event?")) return;
 
-    if (!confirmDelete) return;
+    const res = await fetch("/api/events/delete", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
 
-    try {
-
-      const res = await fetch("/api/events/delete", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-
-        const updatedEvents = events.filter(
-          (event) => event.id !== id
-        );
-
-        setEvents(updatedEvents);
-        setFilteredEvents(updatedEvents);
-
-      } else {
-        alert(data.message);
-      }
-
-    } catch (error) {
-      console.log(error);
+    if (res.ok) {
+      const updated = events.filter((e) => e.id !== id);
+      setEvents(updated);
+      setFilteredEvents(updated);
     }
   }
 
   return (
 
-    <div
-      style={{
-        backgroundColor: "#1c1c1e",
-        minHeight: "100vh",
-        color: "white",
-      }}
-    >
+    <div style={{ backgroundColor: "#1c1c1e", minHeight: "100vh", color: "white" }}>
 
-      {/* navbar */}
+      {/* NAVBAR */}
       <div
         style={{
           display: "flex",
@@ -150,8 +111,14 @@ export default function Home() {
         }}
       >
 
-        <h2 style={{ margin: 0 }}>
-          Event System
+        <h2
+          style={{
+            margin: 0,
+            fontWeight: "700",
+            letterSpacing: "1px",
+          }}
+        >
+          Event<span style={{ color: "#8e8e93" }}>System</span>
         </h2>
 
         <div>
@@ -159,79 +126,29 @@ export default function Home() {
           {user && (
             <>
 
-              <span
-                style={{
-                  marginRight: "15px",
-                  color: "#d1d1d6",
-                }}
-              >
+              <span style={{ marginRight: "15px", color: "#d1d1d6" }}>
                 {user.email} ({user.role})
               </span>
 
-              {/* attendee */}
               {user.role === "attendee" && (
-                <button
-                  onClick={() => router.push("/mybookings")}
-                  style={{
-                    marginRight: "10px",
-                    padding: "8px 12px",
-                    backgroundColor: "#3a3a3c",
-                    color: "white",
-                    border: "1px solid #4a4a4c",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                  }}
-                >
+                <button style={btn} onClick={() => router.push("/mybookings")}>
                   My Bookings
                 </button>
               )}
-              {/* admin */}
+
               {user.role === "admin" && (
-                <button
-                  onClick={() => router.push("/manageusers")}
-                  style={{
-                    marginRight: "10px",
-                    padding: "8px 12px",
-                    backgroundColor: "#3a3a3c",
-                    color: "white",
-                    border: "1px solid #4a4a4c",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                  }}
-                >
+                <button style={btn} onClick={() => router.push("/manageusers")}>
                   Manage Users
                 </button>
               )}
-              {/* orginiser */}
-              {user.role === "orginiser" && (
-                <button
-                  onClick={() => router.push("/myevents")}
-                  style={{
-                    marginRight: "10px",
-                    padding: "8px 12px",
-                    backgroundColor: "#3a3a3c",
-                    color: "white",
-                    border: "1px solid #4a4a4c",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Manage events
+
+              {user.role === "organiser" && (
+                <button style={btn} onClick={() => router.push("/myevents")}>
+                  Manage Events
                 </button>
               )}
 
-
-              <button
-                onClick={logout}
-                style={{
-                  padding: "8px 12px",
-                  backgroundColor: "#3a3a3c",
-                  color: "white",
-                  border: "1px solid #4a4a4c",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                }}
-              >
+              <button style={btn} onClick={logout}>
                 Logout
               </button>
 
@@ -242,120 +159,65 @@ export default function Home() {
 
       </div>
 
-      {/* content */}
-      <div style={{ padding: "30px" }}>
+      {/* CENTER WRAPPER */}
+      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "40px 20px" }}>
 
-        <h1 style={{ marginBottom: "20px" }}>
+        <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
           All Events
         </h1>
 
         {/* search */}
-        <input
-          type="text"
-          placeholder="Search events..."
-          value={search}
-          onChange={(e) => handleSearch(e.target.value)}
-          style={{
-            padding: "12px",
-            width: "320px",
-            marginBottom: "30px",
-            border: "1px solid #3a3a3c",
-            borderRadius: "10px",
-            backgroundColor: "#2c2c2e",
-            color: "white",
-            outline: "none",
-          }}
-        />
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <input
+            type="text"
+            placeholder="Search events..."
+            value={search}
+            onChange={(e) => handleSearch(e.target.value)}
+            style={searchStyle}
+          />
+        </div>
 
-        {/* events grid */}
+        {/* events */}
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
             gap: "20px",
+            marginTop: "30px",
           }}
         >
 
           {filteredEvents.length === 0 ? (
-
-            <p>No events found</p>
-
+            <p style={{ textAlign: "center", width: "100%" }}>
+              No events found
+            </p>
           ) : (
 
             filteredEvents.map((event) => (
 
-              <div
-                key={event.id}
-                style={{
-                  backgroundColor: "#2c2c2e",
-                  border: "1px solid #3a3a3c",
-                  borderRadius: "14px",
-                  padding: "18px",
-                }}
-              >
+              <div key={event.id} style={card}>
 
-                <h3 style={{ marginTop: 0 }}>
-                  {event.title}
-                </h3>
+                <h3>{event.title}</h3>
 
-                <p style={{ color: "#d1d1d6" }}>
-                  <strong>City:</strong> {event.city}
-                </p>
+                <p><strong>City:</strong> {event.city}</p>
+                <p><strong>Type:</strong> {event.event_type}</p>
+                <p><strong>Date:</strong> {event.event_date}</p>
+                <p><strong>Capacity:</strong> {event.capacity}</p>
 
-                <p style={{ color: "#d1d1d6" }}>
-                  <strong>Type:</strong> {event.event_type}
-                </p>
-
-                <p style={{ color: "#d1d1d6" }}>
-                  <strong>Date:</strong> {event.event_date}
-                </p>
-
-                <p style={{ color: "#d1d1d6" }}>
-                  <strong>Capacity:</strong> {event.capacity}
-                </p>
-
-                {/* book button */}
-                <button
-                  onClick={() => handleBook(event.id)}
-                  style={{
-                    marginTop: "12px",
-                    padding: "10px",
-                    width: "100%",
-                    backgroundColor: "white",
-                    color: "black",
-                    border: "none",
-                    borderRadius: "8px",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                  }}
-                >
+                <button style={bookBtn} onClick={() => handleBook(event.id)}>
                   Book Event
                 </button>
 
-                {/* admin delete */}
                 {user?.role === "admin" && (
-
-                  <button
-                    onClick={() => deleteEvent(event.id)}
-                    style={{
-                      marginTop: "10px",
-                      padding: "10px",
-                      width: "100%",
-                      backgroundColor: "#ff453a",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <button style={deleteBtn} onClick={() => deleteEvent(event.id)}>
                     Delete Event
                   </button>
-
                 )}
 
               </div>
 
             ))
+
           )}
 
         </div>
@@ -365,3 +227,55 @@ export default function Home() {
     </div>
   );
 }
+
+/* styles */
+
+const btn = {
+  marginRight: "10px",
+  padding: "8px 12px",
+  backgroundColor: "#3a3a3c",
+  color: "white",
+  border: "1px solid #4a4a4c",
+  borderRadius: "8px",
+  cursor: "pointer",
+};
+
+const searchStyle = {
+  padding: "12px",
+  width: "420px",
+  border: "1px solid #3a3a3c",
+  borderRadius: "10px",
+  backgroundColor: "#2c2c2e",
+  color: "white",
+  outline: "none",
+};
+
+const card = {
+  backgroundColor: "#2c2c2e",
+  border: "1px solid #3a3a3c",
+  borderRadius: "14px",
+  padding: "18px",
+};
+
+const bookBtn = {
+  marginTop: "12px",
+  padding: "10px",
+  width: "100%",
+  backgroundColor: "white",
+  color: "black",
+  border: "none",
+  borderRadius: "8px",
+  fontWeight: "bold",
+  cursor: "pointer",
+};
+
+const deleteBtn = {
+  marginTop: "10px",
+  padding: "10px",
+  width: "100%",
+  backgroundColor: "#ff453a",
+  color: "white",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+};

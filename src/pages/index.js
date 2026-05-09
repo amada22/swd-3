@@ -1,78 +1,184 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
 export default function Home() {
+  const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
+  const [search, setSearch] = useState("");
+  const [user, setUser] = useState(null);
+
+  const router = useRouter();
+
+  // get user from token
+  useEffect(() => {
+    async function getUser() {
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+
+        if (res.ok) {
+          setUser(data);
+        } else {
+          setUser(null);
+          router.push("/login");
+        }
+      } catch (error) {
+        setUser(null);
+        router.push("/login");
+      }
+    }
+
+    getUser();
+  }, []);
+
+  // fetch events
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        const res = await fetch("/api/events/get");
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          setEvents(data);
+          setFilteredEvents(data);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    fetchEvents();
+  }, []);
+
+  // search
+  function handleSearch(value) {
+    setSearch(value);
+
+    const filtered = events.filter((event) =>
+      event.title.toLowerCase().includes(value.toLowerCase())
+    );
+
+    setFilteredEvents(filtered);
+  }
+
+  // booking page
+  function handleBook(id) {
+    router.push(`/booking/${id}`);
+  }
+
+  // logout
+  async function logout() {
+    // document.cookie = "token=; Max-Age=0; Path=/";
+    // router.push("/login");
+
+    await fetch("/api/auth/logout");
+
+    // send user back to login page
+    router.push("/login");
+
+  }
+
+  
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
-    >
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div>
+
+      {/* NAVBAR */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          padding: "15px",
+          borderBottom: "1px solid #ddd",
+        }}
+      >
+        <h2>Event System</h2>
+
+        <div>
+          {user && (
+            <>
+              <span style={{ marginRight: "10px" }}>
+                {user.email} ({user.role})
+              </span>
+
+              {user.role === "attendee" && (
+                <button
+                  onClick={() => router.push("/mybookings")}
+                  style={{ marginRight: "10px" }}
+                >
+                  My Bookings
+                </button>
+              )}
+
+              <button onClick={logout}>Logout</button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* CONTENT */}
+      <div style={{ padding: "20px" }}>
+        <h1>All Events</h1>
+
+        {/* search */}
+        <input
+          type="text"
+          placeholder="Search events..."
+          value={search}
+          onChange={(e) => handleSearch(e.target.value)}
+          style={{
+            padding: "10px",
+            width: "300px",
+            marginBottom: "20px",
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the index.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+
+        {/* events */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+            gap: "15px",
+          }}
+        >
+          {filteredEvents.length === 0 ? (
+            <p>No events found</p>
+          ) : (
+            filteredEvents.map((event) => (
+              <div
+                key={event.id}
+                style={{
+                  border: "1px solid #ddd",
+                  borderRadius: "10px",
+                  padding: "15px",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                }}
+              >
+                <h3>{event.title}</h3>
+                <p>{event.city}</p>
+                <p>{event.event_type}</p>
+                <p>{event.event_date}</p>
+                <p>Capacity: {event.capacity}</p>
+
+                <button
+                  onClick={() => handleBook(event.id)}
+                  style={{
+                    marginTop: "10px",
+                    padding: "8px",
+                    width: "100%",
+                    background: "black",
+                    color: "white",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Book Event
+                </button>
+              </div>
+            ))
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs/pages/getting-started?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }

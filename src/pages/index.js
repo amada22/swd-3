@@ -9,7 +9,7 @@ export default function Home() {
 
   const router = useRouter();
 
-  // get user from token
+  // get logged in user
   useEffect(() => {
     async function getUser() {
       try {
@@ -31,7 +31,7 @@ export default function Home() {
     getUser();
   }, []);
 
-  // fetch events
+  // get all events
   useEffect(() => {
     async function fetchEvents() {
       try {
@@ -50,7 +50,7 @@ export default function Home() {
     fetchEvents();
   }, []);
 
-  // search
+  // search events
   function handleSearch(value) {
     setSearch(value);
 
@@ -61,29 +61,21 @@ export default function Home() {
     setFilteredEvents(filtered);
   }
 
-  // booking page
+  // go to booking page
   function handleBook(id) {
     router.push(`/booking/${id}`);
   }
 
-  // logout
+  // logout user
   async function logout() {
-    // document.cookie = "token=; Max-Age=0; Path=/";
-    // router.push("/login");
-
     await fetch("/api/auth/logout");
-
-    // send user back to login page
     router.push("/login");
-
   }
-
-  
 
   return (
     <div>
 
-      {/* NAVBAR */}
+      {/* navbar */}
       <div
         style={{
           display: "flex",
@@ -110,17 +102,28 @@ export default function Home() {
                 </button>
               )}
 
-              <button onClick={logout}>Logout</button>
+              {user.role === "organiser" && (
+                <button
+                  onClick={() => router.push("/myevents")}
+                  style={{ marginRight: "10px" }}
+                >
+                  My Events
+                </button>
+              )}
+
+              <button onClick={logout}>
+                Logout
+              </button>
             </>
           )}
         </div>
       </div>
 
-      {/* CONTENT */}
+      {/* page content */}
       <div style={{ padding: "20px" }}>
         <h1>All Events</h1>
 
-        {/* search */}
+        {/* search input */}
         <input
           type="text"
           placeholder="Search events..."
@@ -133,7 +136,7 @@ export default function Home() {
           }}
         />
 
-        {/* events */}
+        {/* events list */}
         <div
           style={{
             display: "grid",
@@ -155,6 +158,7 @@ export default function Home() {
                 }}
               >
                 <h3>{event.title}</h3>
+
                 <p>{event.city}</p>
                 <p>{event.event_type}</p>
                 <p>{event.event_date}</p>

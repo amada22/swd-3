@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 export default function Home() {
+
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [search, setSearch] = useState("");
@@ -9,9 +10,11 @@ export default function Home() {
 
   const router = useRouter();
 
-  // get user from token
+  // get user
   useEffect(() => {
+
     async function getUser() {
+
       try {
         const res = await fetch("/api/auth/me");
         const data = await res.json();
@@ -19,39 +22,39 @@ export default function Home() {
         if (res.ok) {
           setUser(data);
         } else {
-          setUser(null);
           router.push("/login");
         }
+
       } catch (error) {
-        setUser(null);
         router.push("/login");
       }
     }
 
     getUser();
+
   }, []);
 
-  // fetch events
+  // get events
   useEffect(() => {
-    async function fetchEvents() {
-      try {
-        const res = await fetch("/api/events/get");
-        const data = await res.json();
 
-        if (Array.isArray(data)) {
-          setEvents(data);
-          setFilteredEvents(data);
-        }
-      } catch (error) {
-        console.log(error);
+    async function fetchEvents() {
+
+      const res = await fetch("/api/events/get");
+      const data = await res.json();
+
+      if (Array.isArray(data)) {
+        setEvents(data);
+        setFilteredEvents(data);
       }
     }
 
     fetchEvents();
+
   }, []);
 
   // search
   function handleSearch(value) {
+
     setSearch(value);
 
     const filtered = events.filter((event) =>
@@ -61,124 +64,218 @@ export default function Home() {
     setFilteredEvents(filtered);
   }
 
-  // booking page
+  // book
   function handleBook(id) {
     router.push(`/booking/${id}`);
   }
 
   // logout
   async function logout() {
-    // document.cookie = "token=; Max-Age=0; Path=/";
-    // router.push("/login");
-
     await fetch("/api/auth/logout");
-
-    // send user back to login page
     router.push("/login");
-
   }
 
-  
+  // delete event
+  async function deleteEvent(id) {
+
+    if (!confirm("Delete this event?")) return;
+
+    const res = await fetch("/api/events/delete", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+
+    if (res.ok) {
+      const updated = events.filter((e) => e.id !== id);
+      setEvents(updated);
+      setFilteredEvents(updated);
+    }
+  }
 
   return (
-    <div>
+
+    <div style={{ backgroundColor: "#1c1c1e", minHeight: "100vh", color: "white" }}>
 
       {/* NAVBAR */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
-          padding: "15px",
-          borderBottom: "1px solid #ddd",
+          alignItems: "center",
+          padding: "16px 24px",
+          backgroundColor: "#2c2c2e",
+          borderBottom: "1px solid #3a3a3c",
+          position: "sticky",
+          top: 0,
         }}
       >
-        <h2>Event System</h2>
+
+        <h2
+          style={{
+            margin: 0,
+            fontWeight: "700",
+            letterSpacing: "1px",
+          }}
+        >
+          Event<span style={{ color: "#8e8e93" }}>System</span>
+        </h2>
 
         <div>
+
           {user && (
             <>
-              <span style={{ marginRight: "10px" }}>
+
+              <span style={{ marginRight: "15px", color: "#d1d1d6" }}>
                 {user.email} ({user.role})
               </span>
 
               {user.role === "attendee" && (
-                <button
-                  onClick={() => router.push("/mybookings")}
-                  style={{ marginRight: "10px" }}
-                >
+                <button style={btn} onClick={() => router.push("/mybookings")}>
                   My Bookings
                 </button>
               )}
 
-              <button onClick={logout}>Logout</button>
+              {user.role === "admin" && (
+                <button style={btn} onClick={() => router.push("/manageusers")}>
+                  Manage Users
+                </button>
+              )}
+
+              {user.role === "organiser" && (
+                <button style={btn} onClick={() => router.push("/myevents")}>
+                  Manage Events
+                </button>
+              )}
+
+              <button style={btn} onClick={logout}>
+                Logout
+              </button>
+
             </>
           )}
+
         </div>
+
       </div>
 
-      {/* CONTENT */}
-      <div style={{ padding: "20px" }}>
-        <h1>All Events</h1>
+      {/* CENTER WRAPPER */}
+      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "40px 20px" }}>
+
+        <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
+          All Events
+        </h1>
 
         {/* search */}
-        <input
-          type="text"
-          placeholder="Search events..."
-          value={search}
-          onChange={(e) => handleSearch(e.target.value)}
-          style={{
-            padding: "10px",
-            width: "300px",
-            marginBottom: "20px",
-          }}
-        />
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <input
+            type="text"
+            placeholder="Search events..."
+            value={search}
+            onChange={(e) => handleSearch(e.target.value)}
+            style={searchStyle}
+          />
+        </div>
 
         {/* events */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-            gap: "15px",
+            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+            gap: "20px",
+            marginTop: "30px",
           }}
         >
-          {filteredEvents.length === 0 ? (
-            <p>No events found</p>
-          ) : (
-            filteredEvents.map((event) => (
-              <div
-                key={event.id}
-                style={{
-                  border: "1px solid #ddd",
-                  borderRadius: "10px",
-                  padding: "15px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                }}
-              >
-                <h3>{event.title}</h3>
-                <p>{event.city}</p>
-                <p>{event.event_type}</p>
-                <p>{event.event_date}</p>
-                <p>Capacity: {event.capacity}</p>
 
-                <button
-                  onClick={() => handleBook(event.id)}
-                  style={{
-                    marginTop: "10px",
-                    padding: "8px",
-                    width: "100%",
-                    background: "black",
-                    color: "white",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
-                >
+          {filteredEvents.length === 0 ? (
+            <p style={{ textAlign: "center", width: "100%" }}>
+              No events found
+            </p>
+          ) : (
+
+            filteredEvents.map((event) => (
+
+              <div key={event.id} style={card}>
+
+                <h3>{event.title}</h3>
+
+                <p><strong>City:</strong> {event.city}</p>
+                <p><strong>Type:</strong> {event.event_type}</p>
+                <p><strong>Date:</strong> {event.event_date}</p>
+                <p><strong>Capacity:</strong> {event.capacity}</p>
+
+                <button style={bookBtn} onClick={() => handleBook(event.id)}>
                   Book Event
                 </button>
+
+                {user?.role === "admin" && (
+                  <button style={deleteBtn} onClick={() => deleteEvent(event.id)}>
+                    Delete Event
+                  </button>
+                )}
+
               </div>
+
             ))
+
           )}
+
         </div>
+
       </div>
+
     </div>
   );
 }
+
+/* styles */
+
+const btn = {
+  marginRight: "10px",
+  padding: "8px 12px",
+  backgroundColor: "#3a3a3c",
+  color: "white",
+  border: "1px solid #4a4a4c",
+  borderRadius: "8px",
+  cursor: "pointer",
+};
+
+const searchStyle = {
+  padding: "12px",
+  width: "420px",
+  border: "1px solid #3a3a3c",
+  borderRadius: "10px",
+  backgroundColor: "#2c2c2e",
+  color: "white",
+  outline: "none",
+};
+
+const card = {
+  backgroundColor: "#2c2c2e",
+  border: "1px solid #3a3a3c",
+  borderRadius: "14px",
+  padding: "18px",
+};
+
+const bookBtn = {
+  marginTop: "12px",
+  padding: "10px",
+  width: "100%",
+  backgroundColor: "white",
+  color: "black",
+  border: "none",
+  borderRadius: "8px",
+  fontWeight: "bold",
+  cursor: "pointer",
+};
+
+const deleteBtn = {
+  marginTop: "10px",
+  padding: "10px",
+  width: "100%",
+  backgroundColor: "#ff453a",
+  color: "white",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+};

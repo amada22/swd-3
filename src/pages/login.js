@@ -2,22 +2,19 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 
 export default function Login() {
+
   const router = useRouter();
 
-  // store form values
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  // store error message
   const [error, setError] = useState("");
 
-  // handle login submit
   async function handleLogin(e) {
     e.preventDefault();
-
     setError("");
 
     try {
+
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -36,7 +33,7 @@ export default function Login() {
         return;
       }
 
-      // redirect after login based on role
+      // redirect by role
       if (data.role === "admin") {
         router.push("/manageusers");
       } else if (data.role === "organiser") {
@@ -51,29 +48,95 @@ export default function Login() {
   }
 
   return (
-    <div>
-      <h1>Login</h1>
 
-      <form onSubmit={handleLogin}>
+    <div
+      style={{
+        backgroundColor: "#1c1c1e",
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        color: "white",
+      }}
+    >
+
+      <form
+        onSubmit={handleLogin}
+        style={{
+          backgroundColor: "#2c2c2e",
+          padding: "30px",
+          borderRadius: "14px",
+          width: "340px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          border: "1px solid #3a3a3c",
+        }}
+      >
+
+        <h2 style={{ marginBottom: "10px" }}>
+          Login
+        </h2>
+
         <input
           type="email"
-          placeholder="email"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          style={inputStyle}
         />
 
         <input
           type="password"
-          placeholder="password"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          style={inputStyle}
         />
 
-        <button type="submit">Login</button>
+        <button style={buttonStyle}>
+          Login
+        </button>
+
+        {error && (
+          <p style={{ color: "#ff453a", fontSize: "13px" }}>
+            {error}
+          </p>
+        )}
+
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: "13px",
+            color: "#8e8e93",
+            cursor: "pointer",
+          }}
+          onClick={() => router.push("/register")}
+        >
+          Don't have an account? Register
+        </p>
+
       </form>
 
-
-      {error && <p>{error}</p>}
     </div>
   );
 }
+
+const inputStyle = {
+  padding: "10px",
+  borderRadius: "8px",
+  border: "1px solid #3a3a3c",
+  backgroundColor: "#1c1c1e",
+  color: "white",
+  outline: "none",
+};
+
+const buttonStyle = {
+  padding: "10px",
+  borderRadius: "8px",
+  border: "none",
+  backgroundColor: "white",
+  color: "black",
+  cursor: "pointer",
+  fontWeight: "bold",
+};

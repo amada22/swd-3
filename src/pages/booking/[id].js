@@ -1,11 +1,20 @@
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function BookingPage() {
   const router = useRouter();
   const { id } = router.query;
 
   const [message, setMessage] = useState("");
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        setUser(data);
+      });
+  }, []);
 
   const handleBooking = async () => {
     try {
@@ -15,7 +24,7 @@ export default function BookingPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id: 1,
+          user_id: user.id,
           event_id: id,
         }),
       });
@@ -23,6 +32,7 @@ export default function BookingPage() {
       const data = await response.json();
 
       setMessage(data.message);
+
     } catch (error) {
       console.log(error);
       setMessage("Something went wrong");
@@ -34,6 +44,12 @@ export default function BookingPage() {
       <h1>Book Event</h1>
 
       <p>Event ID: {id}</p>
+
+      {user && (
+        <p>
+          Logged in as: {user.email}
+        </p>
+      )}
 
       <button onClick={handleBooking}>
         Book Event

@@ -4,29 +4,24 @@ import { jwtVerify } from "jose";
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
 
-  // allow public routes
+  // public routes only
   if (
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/booking") ||
-    pathname.startsWith("/mybookings")
+    pathname.startsWith("/api")
   ) {
     return NextResponse.next();
   }
 
   const token = req.cookies.get("token")?.value;
 
-  // no token
   if (!token) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
   try {
-    // verify token (edge safe)
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-
     await jwtVerify(token, secret);
 
     return NextResponse.next();

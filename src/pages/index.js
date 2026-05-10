@@ -9,7 +9,6 @@ export default function Home() {
 
   const router = useRouter();
 
-  // get logged in user
   useEffect(() => {
     async function getUser() {
       try {
@@ -19,11 +18,9 @@ export default function Home() {
         if (res.ok) {
           setUser(data);
         } else {
-          setUser(null);
           router.push("/login");
         }
       } catch (error) {
-        setUser(null);
         router.push("/login");
       }
     }
@@ -31,7 +28,6 @@ export default function Home() {
     getUser();
   }, []);
 
-  // get all events
   useEffect(() => {
     async function fetchEvents() {
       try {
@@ -50,7 +46,6 @@ export default function Home() {
     fetchEvents();
   }, []);
 
-  // search events
   function handleSearch(value) {
     setSearch(value);
 
@@ -61,12 +56,10 @@ export default function Home() {
     setFilteredEvents(filtered);
   }
 
-  // go to booking page
   function handleBook(id) {
     router.push(`/booking/${id}`);
   }
 
-  // logout user
   async function logout() {
     await fetch("/api/auth/logout");
     router.push("/login");
@@ -74,8 +67,6 @@ export default function Home() {
 
   return (
     <div>
-
-      {/* navbar */}
       <div
         style={{
           display: "flex",
@@ -102,28 +93,15 @@ export default function Home() {
                 </button>
               )}
 
-              {user.role === "organiser" && (
-                <button
-                  onClick={() => router.push("/myevents")}
-                  style={{ marginRight: "10px" }}
-                >
-                  My Events
-                </button>
-              )}
-
-              <button onClick={logout}>
-                Logout
-              </button>
+              <button onClick={logout}>Logout</button>
             </>
           )}
         </div>
       </div>
 
-      {/* page content */}
       <div style={{ padding: "20px" }}>
         <h1>All Events</h1>
 
-        {/* search input */}
         <input
           type="text"
           placeholder="Search events..."
@@ -136,7 +114,6 @@ export default function Home() {
           }}
         />
 
-        {/* events list */}
         <div
           style={{
             display: "grid",
@@ -158,7 +135,6 @@ export default function Home() {
                 }}
               >
                 <h3>{event.title}</h3>
-
                 <p>{event.city}</p>
                 <p>{event.event_type}</p>
                 <p>{event.event_date}</p>

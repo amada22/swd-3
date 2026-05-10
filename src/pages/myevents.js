@@ -4,9 +4,20 @@ import { useRouter } from "next/router";
 export default function MyEvents() {
   const router = useRouter();
 
+  const emptyForm = {
+    title: "",
+    description: "",
+    city: "",
+    event_type: "",
+    event_date: "",
+    capacity: "",
+  };
+
   const [user, setUser] = useState(null);
   const [events, setEvents] = useState([]);
   const [message, setMessage] = useState("");
+  const [form, setForm] = useState(emptyForm);
+  const [editId, setEditId] = useState(null);
 
   useEffect(() => {
     getUser();
@@ -36,6 +47,61 @@ export default function MyEvents() {
 
       setEvents(myEvents);
     }
+  }
+
+  function handleChange(e) {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  }
+
+  async function saveEvent(e) {
+    e.preventDefault();
+
+    const url = editId
+      ? "/api/events/update"
+      : "/api/events/create";
+
+    const method = editId ? "PUT" : "POST";
+
+    const body = editId
+      ? { id: editId, ...form }
+      : form;
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+
+    setMessage(data.message);
+
+    setForm(emptyForm);
+    setEditId(null);
+
+    if (user) {
+      getEvents(user.id);
+    }
+  }
+
+  function startEdit(event) {
+    setEditId(event.id);
+
+    setForm({
+      title: event.title || "",
+      description: event.description || "",
+      city: event.city || "",
+      event_type: event.event_type || "",
+      event_date: event.event_date
+        ? event.event_date.slice(0, 16)
+        : "",
+      capacity: event.capacity || "",
+    });
   }
 
   async function deleteEvent(id) {
@@ -101,6 +167,90 @@ export default function MyEvents() {
 
         {message && <p>{message}</p>}
 
+        <form
+          onSubmit={saveEvent}
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: "10px",
+            padding: "15px",
+            marginBottom: "25px",
+          }}
+        >
+          <h2>{editId ? "Update Event" : "Create Event"}</h2>
+
+          <input
+            name="title"
+            placeholder="Title"
+            value={form.title}
+            onChange={handleChange}
+            required
+            style={{ display: "block", marginBottom: "10px", padding: "8px" }}
+          />
+
+          <input
+            name="description"
+            placeholder="Description"
+            value={form.description}
+            onChange={handleChange}
+            required
+            style={{ display: "block", marginBottom: "10px", padding: "8px" }}
+          />
+
+          <input
+            name="city"
+            placeholder="City"
+            value={form.city}
+            onChange={handleChange}
+            required
+            style={{ display: "block", marginBottom: "10px", padding: "8px" }}
+          />
+
+          <input
+            name="event_type"
+            placeholder="Event type"
+            value={form.event_type}
+            onChange={handleChange}
+            required
+            style={{ display: "block", marginBottom: "10px", padding: "8px" }}
+          />
+
+          <input
+            name="event_date"
+            type="datetime-local"
+            value={form.event_date}
+            onChange={handleChange}
+            required
+            style={{ display: "block", marginBottom: "10px", padding: "8px" }}
+          />
+
+          <input
+            name="capacity"
+            type="number"
+            placeholder="Capacity"
+            value={form.capacity}
+            onChange={handleChange}
+            required
+            style={{ display: "block", marginBottom: "10px", padding: "8px" }}
+          />
+
+          <button type="submit">
+            {editId ? "Update Event" : "Create Event"}
+          </button>
+
+          {editId && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditId(null);
+                setForm(emptyForm);
+              }}
+              style={{ marginLeft: "10px" }}
+            >
+              Cancel Edit
+            </button>
+          )}
+        </form>
+
         {events.length === 0 ? (
           <p>No events found.</p>
         ) : (
@@ -120,6 +270,17 @@ export default function MyEvents() {
               <p>{event.event_type}</p>
               <p>{event.event_date}</p>
               <p>Capacity: {event.capacity}</p>
+
+              <button
+                onClick={() => startEdit(event)}
+                style={{
+                  marginRight: "10px",
+                  padding: "8px",
+                  cursor: "pointer",
+                }}
+              >
+                Edit Event
+              </button>
 
               <button
                 onClick={() => deleteEvent(event.id)}

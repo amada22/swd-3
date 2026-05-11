@@ -50,18 +50,7 @@ export default function ProfilPage() {
     e.preventDefault();
 
     try {
-      // Example API call
-      // Replace with your backend route
-
-      /*
-      await fetch("/api/user/update", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      */
+      
 
       setMessage("Profile updated successfully!");
 

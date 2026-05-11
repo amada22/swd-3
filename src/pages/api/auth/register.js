@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   try {
     const { name, email, password } = req.body;
 
-    // 1. Check if user exists
+    // Check if user exists
     const [existingUser] = await db.query(
       "SELECT * FROM users WHERE email = ?",
       [email]
@@ -23,16 +23,16 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // 2. Hash password
+    // Hash passeword using bcrypt
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Insert user into DB
+    // Insert user into DB
     await db.query(
       "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
       [name, email, hashedPassword, "attendee"]
     );
 
-    // 4. Success response
+    // Success response
     return res.status(200).json({ message: "User registered successfully" });
 
   } catch (error) {

@@ -34,7 +34,10 @@ export default function Home() {
 
   }, []);
 
+<<<<<<< HEAD
   // get events
+=======
+>>>>>>> jaime-booking-system
   useEffect(() => {
 
     async function fetchEvents() {
@@ -52,7 +55,6 @@ export default function Home() {
 
   }, []);
 
-  // search
   function handleSearch(value) {
 
     setSearch(value);
@@ -64,17 +66,20 @@ export default function Home() {
     setFilteredEvents(filtered);
   }
 
+<<<<<<< HEAD
   // book
+=======
+>>>>>>> jaime-booking-system
   function handleBook(id) {
     router.push(`/booking/${id}`);
   }
 
-  // logout
   async function logout() {
     await fetch("/api/auth/logout");
     router.push("/login");
   }
 
+<<<<<<< HEAD
   // delete event
   async function deleteEvent(id) {
 
@@ -98,6 +103,10 @@ export default function Home() {
     <div style={{ backgroundColor: "#1c1c1e", minHeight: "100vh", color: "white" }}>
 
       {/* NAVBAR */}
+=======
+  return (
+    <div>
+>>>>>>> jaime-booking-system
       <div
         style={{
           display: "flex",
@@ -159,6 +168,7 @@ export default function Home() {
 
       </div>
 
+<<<<<<< HEAD
       {/* CENTER WRAPPER */}
       <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "40px 20px" }}>
 
@@ -176,8 +186,23 @@ export default function Home() {
             style={searchStyle}
           />
         </div>
+=======
+      <div style={{ padding: "20px" }}>
+        <h1>All Events</h1>
 
-        {/* events */}
+        <input
+          type="text"
+          placeholder="Search events..."
+          value={search}
+          onChange={(e) => handleSearch(e.target.value)}
+          style={{
+            padding: "10px",
+            width: "300px",
+            marginBottom: "20px",
+          }}
+        />
+>>>>>>> jaime-booking-system
+
         <div
           style={{
             display: "grid",
